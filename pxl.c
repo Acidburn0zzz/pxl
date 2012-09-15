@@ -172,6 +172,8 @@ int read_ppm()
 		return 0;
 	}
 
+	c = getc(f);
+
 	int integer[3] = { 0, 0, 0};
 	for (int i = 0; i < 3; i++) {
 		while('#' == (c = getc(f)))
