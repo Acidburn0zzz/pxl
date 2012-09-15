@@ -3,5 +3,7 @@ LDFLAGS = -lm $(shell sdl-config --libs)
 
 pxl: pxl.c
 
+test: pxl
+	./pxl *.ppm
 clean:
 	rm -f pxl
