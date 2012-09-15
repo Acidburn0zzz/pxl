@@ -52,16 +52,16 @@ void exiterr(const char* fmt, ...)
 void init_video(int w, int h)
 {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
-		exiterr("SDL can not be initialized: ");
+		exiterr("SDL can not be initialized.\n");
 	
 	screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	
 	if(!screen)
-		exiterr("Unable to set video: ");
+		exiterr("Unable to set video.\n");
 	if(screen->format->BitsPerPixel != 32)
-		exiterr("Could not init 32 bit format: ");
+		exiterr("Could not init 32 bit format.\n");
 	if(screen->w != w || screen->h != h)
-		exiterr("Couldnt get %dx%d Window.\n", w, h);
+		exiterr("Could not get %dx%d window.\n", w, h);
 }
 
 void init_keyboard()
@@ -161,14 +161,14 @@ int read_ppm()
 	
 	if(!f)
 	{
-		showerr("File can not be read. ");
+		showerr("File can not be read.\n");
 		return 0;
 	}
 
 	if(('P' != getc(f)) || ('6' != getc(f)))
 	{
 		fclose(f);
-		showerr("not ppm p6 image.");
+		showerr("Not ppm p6 image.\n");
 		return 0;
 	}
 
@@ -197,7 +197,7 @@ int read_ppm()
 	if(!integer[0] && !integer[1] && !integer[2])
 	{
 		fclose(f);
-		showerr("couldnt read image.");
+		showerr("Could not read image.\n");
 		return 0;
 	}
 	img.w = integer[0];
@@ -207,7 +207,7 @@ int read_ppm()
 	if(rgb != 255)
 	{
 		fclose(f);
-		showerr("sorry, only 24bit images supported.");
+		showerr("Sorry, only 24bit images supported.\n");
 		return 0;
 	}
 	
@@ -218,7 +218,7 @@ int read_ppm()
 	if(!img.pixels)
 	{
 		fclose(f);
-		exiterr("Unable to allocate memory.");
+		exiterr("Unable to allocate memory.\n");
 		return 0;
 	}
 
@@ -227,7 +227,7 @@ int read_ppm()
 		free(img.pixels);
 		img.pixels = 0;
 		fclose(f);
-		showerr("Error loading image.");
+		showerr("Error loading image.\n");
 		return 0;
 	}
 
@@ -260,7 +260,7 @@ void show_image(int next)
 		set_curr_arg(next);
 		
 		if(i == args_num)
-			exiterr("No file is readable.");
+			exiterr("No file is readable.\n");
 		i++;
 	}
 
@@ -333,7 +333,7 @@ void handle_event()
 int main(int argc, char** argv)
 {
 	if(argc <= 1)
-		exiterr("No args.");
+		exiterr("No args.\n");
 
 	img.pixels = 0;
 	
