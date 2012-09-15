@@ -349,6 +349,7 @@ int main(int argc, char** argv)
 	for(;;)
 	{
 		handle_event();	
+		SDL_Delay(10);
 	}
 
 	return 0;
