@@ -49,11 +49,8 @@ void exiterr(const char* fmt, ...)
 	exit(1);
 }
 
-void init_video(int w, int h)
+void resize_video(int w, int h)
 {
-	if(SDL_Init(SDL_INIT_VIDEO) < 0)
-		exiterr("SDL can not be initialized.\n");
-	
 	screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	
 	if(!screen)
@@ -62,17 +59,6 @@ void init_video(int w, int h)
 		exiterr("Could not init 32 bit format.\n");
 	if(screen->w != w || screen->h != h)
 		exiterr("Could not get %dx%d window.\n", w, h);
-}
-
-void init_keyboard()
-{
-	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-}
-
-void init_ui(int w, int h)
-{
-	init_video(w, h);
-	init_keyboard();
 }
 
 void draw()
@@ -121,11 +107,6 @@ void draw()
 }
 
 //current = (current + argc + direction) % argc
-
-void toScreen()
-{
-	SDL_Flip(screen);
-}
 
 void set_next_arg()
 {
@@ -243,13 +224,13 @@ void update()
 	int height = img.h * (scale + grid);
 
 	if(!screen || (screen->w != width || screen->h != height))
-		init_ui(width, height);
+		resize_video(width, height);
 	
 	SDL_WM_SetCaption(file_name, "pixelka");
 	SDL_FillRect(screen, 0, 0);
 
 	draw();
-	toScreen();
+	SDL_Flip(screen);
 }
 
 void show_image(int next)
@@ -346,7 +327,13 @@ int main(int argc, char** argv)
 	args = argv;
 
 	curr_arg = 0;
+
+	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+		exiterr("SDL can not be initialized.\n");
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+
 	show_image(1);
+
 
 	for(;;)
 	{
