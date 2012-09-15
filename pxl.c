@@ -338,7 +338,7 @@ int main(int argc, char** argv)
 	img.pixels = 0;
 	
 	scale = 4;
-	grid = 1;
+	grid = 0;
 
 	args_num = argc;
 	args = argv;
