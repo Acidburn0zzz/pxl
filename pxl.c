@@ -193,7 +193,7 @@ int read_ppm()
 		}
 		integer[i] = atoi(buff);
 	}
-	fprintf(stderr, "%d %d %d\n", integer[0], integer[1], integer[2]);
+	
 	if(!integer[0] && !integer[1] && !integer[2])
 	{
 		fclose(f);
