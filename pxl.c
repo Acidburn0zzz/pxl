@@ -10,17 +10,8 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 #include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
-
-struct pixel
-{
-	unsigned char red, green, blue;
-};
-
-struct image 
-{
-	struct pixel* pixels;
-	int w, h;
-};
+#include "image.h"
+#include "reader.h"
 
 SDL_Surface* screen;
 int scale;
@@ -131,91 +122,8 @@ void set_curr_arg(int next)
 		set_next_arg();
 	else
 		set_prev_arg();
-}
 
-int read_ppm()
-{
-	int c, rgb;
-
-	file_name = args[curr_arg];	
-	FILE* f = fopen(file_name, "r");
-	
-	if(!f)
-	{
-		showerr("File can not be read.\n");
-		return 0;
-	}
-
-	if(('P' != getc(f)) || ('6' != getc(f)))
-	{
-		fclose(f);
-		showerr("Not ppm p6 image.\n");
-		return 0;
-	}
-
-	c = getc(f);
-
-	int integer[3] = { 0, 0, 0};
-	for (int i = 0; i < 3; i++) {
-		while('#' == (c = getc(f)))
-			while(getc(f) != '\n');
-
-		while ((c < '0') || ('9' < c))
-			c = getc(f);
-
-		char buff[16];
-		for (int pos = 0; pos < 16; pos++) {
-			if (('0' <= c) && (c <= '9'))
-			{
-				buff[pos] = c;
-				c = getc(f);
-			} else {
-				buff[pos] = 0;
-				break;
-			}
-		}
-		integer[i] = atoi(buff);
-	}
-	
-	if(!integer[0] && !integer[1] && !integer[2])
-	{
-		fclose(f);
-		showerr("Could not read image.\n");
-		return 0;
-	}
-	img.w = integer[0];
-	img.h = integer[1];
-	rgb = integer[2];
-
-	if(rgb != 255)
-	{
-		fclose(f);
-		showerr("Sorry, only 24bit images supported.\n");
-		return 0;
-	}
-	
-	size_t bytes = sizeof(struct pixel) * img.w * img.h;
-
-	free(img.pixels);
-	img.pixels = (struct pixel*)malloc(bytes);
-	if(!img.pixels)
-	{
-		fclose(f);
-		exiterr("Unable to allocate memory.\n");
-		return 0;
-	}
-
-	if(fread(img.pixels, bytes, 1, f) != 1)
-	{
-		free(img.pixels);
-		img.pixels = 0;
-		fclose(f);
-		showerr("Error loading image.\n");
-		return 0;
-	}
-
-	fclose(f);
-	return 1;
+	file_name = args[curr_arg];
 }
 
 void update()
@@ -238,7 +146,7 @@ void show_image(int next)
 	int i = 0;
 
 	set_curr_arg(next);
-	while(!read_ppm())
+	while(!read_ppm_P6(file_name, &img))
 	{
 		set_curr_arg(next);
 		
