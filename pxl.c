@@ -24,19 +24,12 @@ int curr_arg;
 struct image img;
 const char* file_name;
 
-void showerr(const char* fmt, ...)
+void exiterr(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
 	fprintf(stderr, fmt, args);
 	fprintf(stderr, "%s\n", SDL_GetError());
-}
-
-void exiterr(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	showerr(fmt, args);
 	exit(1);
 }
 
