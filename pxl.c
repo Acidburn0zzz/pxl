@@ -90,33 +90,11 @@ void draw()
 	}
 }
 
-//current = (current + argc + direction) % argc
-
-void set_next_arg()
+void set_curr_arg(int direction)
 {
-	curr_arg++;
-	
-	if(curr_arg == args_num)
-		curr_arg = 1;
-}
-
-void set_prev_arg()
-{
-	curr_arg--;
-
-	if(curr_arg == 0)
-		curr_arg = args_num -1;
-
-}
-
-void set_curr_arg(int next)
-{
-	if(next)
-		set_next_arg();
-	else
-		set_prev_arg();
-
-	file_name = args[curr_arg];
+	int n = args_num - 1;
+	curr_arg = (curr_arg + n + direction) % n;
+	file_name = args[curr_arg + 1];
 }
 
 void update()
@@ -134,14 +112,14 @@ void update()
 	SDL_Flip(screen);
 }
 
-void show_image(int next)
+void show_image(int direction)
 {	
 	int i = 0;
 
-	set_curr_arg(next);
+	set_curr_arg(direction);
 	while(!read_ppm_P6(file_name, &img))
 	{
-		set_curr_arg(next);
+		set_curr_arg(direction);
 		
 		if(i == args_num)
 			exiterr("No file is readable.\n");
@@ -190,7 +168,7 @@ void handle_event()
 						show_image(1);
 						break;
 					case SDLK_BACKSPACE:
-						show_image(0);
+						show_image(-1);
 						break;
 					case SDLK_q:
 				   	case SDLK_ESCAPE:
@@ -234,7 +212,6 @@ int main(int argc, char** argv)
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
 	show_image(1);
-
 
 	for(;;)
 	{
