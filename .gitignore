@@ -1,3 +1,4 @@
 pxl
 *.ppm
 .*.swp
+*.o
