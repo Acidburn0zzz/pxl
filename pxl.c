@@ -13,6 +13,8 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 #include "image.h"
 #include "reader.h"
 
+char* icon = "pixelka"; //TODO: create icon
+
 SDL_Surface* screen;
 int scale;
 int grid;
@@ -22,8 +24,11 @@ char** args;
 int curr_arg;
 
 struct image img;
-const char* file_name;
+char* file_name;
 
+int x_pos;
+int y_pos;
+		
 void exiterr(const char* fmt, ...)
 {
 	va_list args;
@@ -47,7 +52,7 @@ void resize_video(int w, int h)
 
 void draw()
 {
-	uint32_t rgb_grid_w = 0x00000000;
+	uint32_t rgb_grid = 0;
 	uint32_t* fb = (uint32_t*) screen->pixels;
 	
 	for (int i = 0; i < img.h; i++)
@@ -57,8 +62,8 @@ void draw()
 			struct pixel p = img.pixels[i * img.w + j];
 			uint32_t rgb = (p.red << 16) | (p.green << 8) | (p.blue);
 		
-			int w_pos = j * (scale + grid);
-			int h_pos = i * (scale + grid);
+			int w_pos = j * (scale + grid) + grid;
+			int h_pos = i * (scale + grid) + grid;
 
 			for(int k = 0; k < scale; k++)
 			{
@@ -70,20 +75,14 @@ void draw()
 				}
 				
 				if(grid)
-				{
-					rgb_grid_w = 0xffffffff - rgb_grid_w;
-					fb[(h_pos + scale) * screen->w + w_pos_k] = rgb_grid_w;
-				}
+					fb[(h_pos + scale) * screen->w + w_pos_k] = rgb_grid;
 			}
 			
 			if(grid)
 			{
-				uint32_t rgb_grid_h = 0x00000000;
-				
 				for(int l = 0; l < scale; l++)
 				{
-					rgb_grid_h = 0xffffffff - rgb_grid_h;
-					fb[(h_pos + l) * screen->w + (w_pos + scale)] = rgb_grid_h;
+					fb[(h_pos + l) * screen->w + (w_pos + scale)] = rgb_grid;
 				}
 			}
 		} 
@@ -99,16 +98,19 @@ void set_curr_arg(int direction)
 
 void update()
 {
-	int width = img.w * (scale + grid);
-	int height = img.h * (scale + grid);
+	int width = img.w * (scale + grid) + grid;
+	int height = img.h * (scale + grid) + grid;
 
 	if(!screen || (screen->w != width || screen->h != height))
 		resize_video(width, height);
 	
-	SDL_WM_SetCaption(file_name, "pixelka");
+	SDL_WM_SetCaption(file_name, icon);
 	SDL_FillRect(screen, 0, 0);
 
 	draw();
+	
+	x_pos = y_pos = 0;
+
 	SDL_Flip(screen);
 }
 
@@ -129,20 +131,50 @@ void show_image(int direction)
 	update();
 }
 
-void change_caption(int x, int y)
+void draw_cell_grid(uint32_t rgb)
 {
-	char caption[100]; 
-	
+	uint32_t* fb = (uint32_t*) screen->pixels;
 	int step = scale + grid;
 
-	x /= step;
-	y /= step;
+	for(int i = 0; i <= step; i++)
+	{
+		fb[y_pos * screen->w + x_pos + i] = rgb;	
+		fb[(y_pos + step) * screen->w + x_pos + i] = rgb;	
+		
+		fb[(y_pos + i) * screen->w + x_pos] = rgb;	
+		fb[(y_pos + i) * screen->w + x_pos + step] = rgb;	
+	}
 
-	int i = y * img.w + x;
-	struct pixel p = img.pixels[i];
-	
-	snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", file_name, x, y, p.red, p.green, p.blue);
-	SDL_WM_SetCaption(caption, "pixelka");
+}
+
+void change(int x_mouse, int y_mouse)
+{
+	char caption[100]; 
+
+	int step = scale + grid;
+
+	int x = x_mouse / step;
+	int y = y_mouse / step;
+
+	if((0 <= x && x < img.w) && (0 <= y && y < img.h))
+	{
+		if(grid)
+		{
+			draw_cell_grid(0);
+			
+			x_pos = x * step;//TODO: +grid
+			y_pos = y * step;
+
+			draw_cell_grid(0xffffffff);
+			SDL_Flip(screen);
+		}
+
+		int i = y * img.w + x;
+		struct pixel p = img.pixels[i];
+		
+		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", file_name, x, y, p.red, p.green, p.blue);
+		SDL_WM_SetCaption(caption, icon);
+	}
 }
 
 void handle_event()
@@ -155,7 +187,7 @@ void handle_event()
 		switch(event.type)
 		{
 			case SDL_MOUSEMOTION:
-				change_caption(event.motion.x, event.motion.y);
+				change(event.motion.x, event.motion.y);
 				break;
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym)
