@@ -26,8 +26,8 @@ int curr_arg;
 struct image img;
 char* file_name;
 
-int x_pos;
-int y_pos;
+int x_grid_cell;
+int y_grid_cell;
 
 void exiterr(const char* fmt, ...)
 {
@@ -109,7 +109,7 @@ void update()
 
 	draw();
 
-	x_pos = y_pos = 0;
+	x_grid_cell = y_grid_cell = 0;
 
 	SDL_Flip(screen);
 }
@@ -131,20 +131,26 @@ void show_image(int direction)
 	update();
 }
 
-void draw_cell_grid(uint32_t rgb)
+void draw_grid_cell(uint32_t rgb)
 {
 	uint32_t* fb = (uint32_t*) screen->pixels;
-	int step = scale + grid;
+	int w = screen->w;
 
-	for(int i = 0; i <= step; i++)
+	int jump = scale + 1;
+	int line = scale + 2;
+
+	for(int i = 0; i < line; i++)
 	{
-		fb[y_pos * screen->w + x_pos + i] = rgb;
-		fb[(y_pos + step) * screen->w + x_pos + i] = rgb;
+		int x = x_grid_cell + i;
 
-		fb[(y_pos + i) * screen->w + x_pos] = rgb;
-		fb[(y_pos + i) * screen->w + x_pos + step] = rgb;
+		fb[y_grid_cell * w + x] = rgb;
+		fb[(y_grid_cell + jump) * w + x] = rgb;
+
+		int y = (y_grid_cell + i) * w;
+
+		fb[y + x_grid_cell] = rgb;
+		fb[y + x_grid_cell + jump] = rgb;
 	}
-
 }
 
 void change(int x_mouse, int y_mouse)
@@ -160,12 +166,12 @@ void change(int x_mouse, int y_mouse)
 	{
 		if(grid)
 		{
-			draw_cell_grid(0);
+			draw_grid_cell(0);
 
-			x_pos = x * step;//TODO +grid
-			y_pos = y * step;
+			x_grid_cell = x * step;
+			y_grid_cell = y * step;
 
-			draw_cell_grid(0xffffffff);
+			draw_grid_cell(0x00dddddd);
 			SDL_Flip(screen);
 		}
 
