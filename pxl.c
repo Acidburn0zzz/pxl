@@ -28,7 +28,7 @@ char* file_name;
 
 int x_pos;
 int y_pos;
-		
+
 void exiterr(const char* fmt, ...)
 {
 	va_list args;
@@ -41,7 +41,7 @@ void exiterr(const char* fmt, ...)
 void resize_video(int w, int h)
 {
 	screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-	
+
 	if(!screen)
 		exiterr("Unable to set video.\n");
 	if(screen->format->BitsPerPixel != 32)
@@ -54,14 +54,14 @@ void draw()
 {
 	uint32_t rgb_grid = 0;
 	uint32_t* fb = (uint32_t*) screen->pixels;
-	
+
 	for (int i = 0; i < img.h; i++)
 	{
 		for (int j = 0; j < img.w; j++)
 		{
 			struct pixel p = img.pixels[i * img.w + j];
 			uint32_t rgb = (p.red << 16) | (p.green << 8) | (p.blue);
-		
+
 			int w_pos = j * (scale + grid) + grid;
 			int h_pos = i * (scale + grid) + grid;
 
@@ -73,11 +73,11 @@ void draw()
 				{
 					fb[(h_pos + l) * screen->w + w_pos_k] = rgb;
 				}
-				
+
 				if(grid)
 					fb[(h_pos + scale) * screen->w + w_pos_k] = rgb_grid;
 			}
-			
+
 			if(grid)
 			{
 				for(int l = 0; l < scale; l++)
@@ -85,7 +85,7 @@ void draw()
 					fb[(h_pos + l) * screen->w + (w_pos + scale)] = rgb_grid;
 				}
 			}
-		} 
+		}
 	}
 }
 
@@ -103,26 +103,26 @@ void update()
 
 	if(!screen || (screen->w != width || screen->h != height))
 		resize_video(width, height);
-	
+
 	SDL_WM_SetCaption(file_name, icon);
 	SDL_FillRect(screen, 0, 0);
 
 	draw();
-	
+
 	x_pos = y_pos = 0;
 
 	SDL_Flip(screen);
 }
 
 void show_image(int direction)
-{	
+{
 	int i = 0;
 
 	set_curr_arg(direction);
 	while(!read_ppm_P6(file_name, &img))
 	{
 		set_curr_arg(direction);
-		
+
 		if(i == args_num)
 			exiterr("No file is readable.\n");
 		i++;
@@ -138,18 +138,18 @@ void draw_cell_grid(uint32_t rgb)
 
 	for(int i = 0; i <= step; i++)
 	{
-		fb[y_pos * screen->w + x_pos + i] = rgb;	
-		fb[(y_pos + step) * screen->w + x_pos + i] = rgb;	
-		
-		fb[(y_pos + i) * screen->w + x_pos] = rgb;	
-		fb[(y_pos + i) * screen->w + x_pos + step] = rgb;	
+		fb[y_pos * screen->w + x_pos + i] = rgb;
+		fb[(y_pos + step) * screen->w + x_pos + i] = rgb;
+
+		fb[(y_pos + i) * screen->w + x_pos] = rgb;
+		fb[(y_pos + i) * screen->w + x_pos + step] = rgb;
 	}
 
 }
 
 void change(int x_mouse, int y_mouse)
 {
-	char caption[100]; 
+	char caption[100];
 
 	int step = scale + grid;
 
@@ -161,8 +161,8 @@ void change(int x_mouse, int y_mouse)
 		if(grid)
 		{
 			draw_cell_grid(0);
-			
-			x_pos = x * step;//TODO: +grid
+
+			x_pos = x * step;//TODO +grid
 			y_pos = y * step;
 
 			draw_cell_grid(0xffffffff);
@@ -171,7 +171,7 @@ void change(int x_mouse, int y_mouse)
 
 		int i = y * img.w + x;
 		struct pixel p = img.pixels[i];
-		
+
 		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", file_name, x, y, p.red, p.green, p.blue);
 		SDL_WM_SetCaption(caption, icon);
 	}
@@ -181,7 +181,7 @@ void handle_event()
 {
 	SDL_Event event;
 	SDLKey sym;
-	
+
 	while(SDL_PollEvent(&event))
 	{
 		switch(event.type)
@@ -203,7 +203,7 @@ void handle_event()
 						show_image(-1);
 						break;
 					case SDLK_q:
-				   	case SDLK_ESCAPE:
+					case SDLK_ESCAPE:
 						exit(0);
 						break;
 					default:
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 		exiterr("No args.\n");
 
 	img.pixels = 0;
-	
+
 	scale = 4;
 	grid = 0;
 
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
 
 	for(;;)
 	{
-		handle_event();	
+		handle_event();
 		SDL_Delay(10);
 	}
 
