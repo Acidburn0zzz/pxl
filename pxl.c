@@ -151,6 +151,7 @@ void draw_grid_cell(uint32_t rgb)
 		fb[y + x_grid_cell] = rgb;
 		fb[y + x_grid_cell + jump] = rgb;
 	}
+	SDL_UpdateRect(screen, x_grid_cell, y_grid_cell, line, line);
 }
 
 void change(int x_mouse, int y_mouse)
@@ -172,7 +173,6 @@ void change(int x_mouse, int y_mouse)
 			y_grid_cell = y * step;
 
 			draw_grid_cell(0x00dddddd);
-			SDL_Flip(screen);
 		}
 
 		int i = y * img.w + x;
@@ -188,12 +188,16 @@ void handle_event()
 	SDL_Event event;
 	SDLKey sym;
 
+	int mouse_x = -1;
+	int mouse_y = -1;
+
 	while(SDL_PollEvent(&event))
 	{
 		switch(event.type)
 		{
 			case SDL_MOUSEMOTION:
-				change(event.motion.x, event.motion.y);
+				mouse_x = event.motion.x;
+				mouse_y = event.motion.y;
 				break;
 			case SDL_KEYDOWN:
 				switch(event.key.keysym.sym)
@@ -214,7 +218,7 @@ void handle_event()
 						break;
 					default:
 						sym = event.key.keysym.sym;
-						if (SDLK_0 < sym && sym <= SDLK_9) {
+						if(SDLK_0 < sym && sym <= SDLK_9) {
 							scale = sym - SDLK_0;
 							update();
 						}
@@ -228,6 +232,9 @@ void handle_event()
 				break;
 		}
 	}
+
+	if(mouse_x != -1 && mouse_y != -1)
+		change(mouse_x, mouse_y);
 }
 
 int main(int argc, char** argv)
