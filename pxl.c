@@ -26,6 +26,8 @@ int curr_arg;
 struct image img;
 char* file_name;
 
+int fb_dirty;
+
 int x_grid_cell;
 int y_grid_cell;
 
@@ -87,6 +89,8 @@ void draw()
 			}
 		}
 	}
+
+	fb_dirty = 1;
 }
 
 void set_curr_arg(int direction)
@@ -110,8 +114,6 @@ void update()
 	draw();
 
 	x_grid_cell = y_grid_cell = 0;
-
-	SDL_Flip(screen);
 }
 
 void show_image(int direction)
@@ -151,7 +153,8 @@ void draw_grid_cell(uint32_t rgb)
 		fb[y + x_grid_cell] = rgb;
 		fb[y + x_grid_cell + jump] = rgb;
 	}
-	SDL_UpdateRect(screen, x_grid_cell, y_grid_cell, line, line);
+
+	fb_dirty = 1;
 }
 
 void change(int x_mouse, int y_mouse)
@@ -251,6 +254,7 @@ int main(int argc, char** argv)
 	scale = 4;
 	grid = 0;
 
+	fb_dirty = 0;
 	args_num = argc;
 	args = argv;
 
@@ -265,6 +269,13 @@ int main(int argc, char** argv)
 	for(;;)
 	{
 		handle_event();
+
+		if(fb_dirty)
+		{
+			SDL_Flip(screen);
+			fb_dirty = 0;
+		}
+
 		SDL_Delay(10);
 	}
 
