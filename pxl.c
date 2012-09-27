@@ -183,10 +183,37 @@ void change(int x_mouse, int y_mouse)
 	}
 }
 
+void handle_keydown(SDLKey key)
+{
+	switch(key)
+	{
+		case SDLK_g:
+			grid ^= 1;
+			update();
+			break;
+		case SDLK_SPACE:
+			show_image(1);
+			break;
+		case SDLK_BACKSPACE:
+			show_image(-1);
+			break;
+		case SDLK_q:
+		case SDLK_ESCAPE:
+			exit(0);
+			break;
+		default:
+			if(SDLK_0 < key && key <= SDLK_9)
+			{
+				scale = key - SDLK_0;
+				update();
+			}
+			break;
+	}
+}
+
 void handle_event()
 {
 	SDL_Event event;
-	SDLKey sym;
 
 	int mouse_x = -1;
 	int mouse_y = -1;
@@ -200,30 +227,7 @@ void handle_event()
 				mouse_y = event.motion.y;
 				break;
 			case SDL_KEYDOWN:
-				switch(event.key.keysym.sym)
-				{
-					case SDLK_g:
-						grid ^= 1;
-						update();
-						break;
-					case SDLK_SPACE:
-						show_image(1);
-						break;
-					case SDLK_BACKSPACE:
-						show_image(-1);
-						break;
-					case SDLK_q:
-					case SDLK_ESCAPE:
-						exit(0);
-						break;
-					default:
-						sym = event.key.keysym.sym;
-						if(SDLK_0 < sym && sym <= SDLK_9) {
-							scale = sym - SDLK_0;
-							update();
-						}
-						break;
-				}
+				handle_keydown(event.key.keysym.sym);
 				break;
 			case SDL_QUIT:
 				exit(0);
