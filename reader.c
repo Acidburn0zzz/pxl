@@ -17,14 +17,14 @@ int read_ppm_P6(const char* filename, struct image *img)
 	
 	if(!f)
 	{
-		fprintf(stderr, "File can not be read.\n");
+		fprintf(stderr, "File \"%s\" can not be opened.\n", filename);
 		return 0;
 	}
 
 	if(('P' != getc(f)) || ('6' != getc(f)))
 	{
 		fclose(f);
-		fprintf(stderr, "Not ppm p6 image.\n");
+		fprintf(stderr, "File \"%s\" is not ppm P6 image.\n", filename);
 		return 0;
 	}
 
@@ -55,7 +55,7 @@ int read_ppm_P6(const char* filename, struct image *img)
 	if(!integer[0] && !integer[1] && !integer[2])
 	{
 		fclose(f);
-		fprintf(stderr, "Could not read image.\n");
+		fprintf(stderr, "Could not read image \"%s\".\n", filename);
 		return 0;
 	}
 	img->w = integer[0];
@@ -65,7 +65,7 @@ int read_ppm_P6(const char* filename, struct image *img)
 	if(rgb != 255)
 	{
 		fclose(f);
-		fprintf(stderr, "Sorry, only 24bit images supported.\n");
+		fprintf(stderr, "Sorry, can not read image \"%s\". Only 24bit images supported.\n", filename);
 		return 0;
 	}
 	
@@ -76,7 +76,7 @@ int read_ppm_P6(const char* filename, struct image *img)
 	if(!img->pixels)
 	{
 		fclose(f);
-		fprintf(stderr, "Unable to allocate memory.\n");
+		fprintf(stderr, "Unable to allocate memory for %dx%d image \"%s\".\n", img->w, img->h, filename);
 		return 0;
 	}
 
@@ -85,7 +85,7 @@ int read_ppm_P6(const char* filename, struct image *img)
 		free(img->pixels);
 		img->pixels = 0;
 		fclose(f);
-		fprintf(stderr, "Error loading image.\n");
+		fprintf(stderr, "Error loading image \"%s\".\n", filename);
 		return 0;
 	}
 
