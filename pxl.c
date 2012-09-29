@@ -42,20 +42,39 @@ void exiterr(const char* fmt, ...)
 
 void resize_video(int w, int h)
 {
-	screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	if(!screen || (screen->w != w || screen->h != h))
+	{
+		if(screen)
+			SDL_FreeSurface(screen);
 
-	if(!screen)
-		exiterr("Unable to set video.\n");
-	if(screen->format->BitsPerPixel != 32)
-		exiterr("Could not init 32 bit format.\n");
-	if(screen->w != w || screen->h != h)
-		exiterr("Could not get %dx%d window.\n", w, h);
+		screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF);
+
+		if(!screen)
+			exiterr("Unable to set video.\n");
+		if(screen->format->BitsPerPixel != 32)
+			exiterr("Could not init 32 bit format.\n");
+		if(screen->w != w || screen->h != h)
+			exiterr("Could not get %dx%d window.\n", w, h);
+	}
+
+	SDL_WM_SetCaption(file_name, icon);
+	SDL_FillRect(screen, 0, 0);
+}
+
+void set_pixel(int x, int y, uint32_t* fb, int length, uint32_t rgb)
+{
+	int i = y * screen->w + x;
+
+	if((0 <= i && i < length) && (x < screen->w && y < screen->h))
+		fb[i] = rgb;
 }
 
 void draw()
 {
 	uint32_t rgb_grid = 0;
 	uint32_t* fb = (uint32_t*) screen->pixels;
+
+	int length = screen->w * screen->h;
 
 	for (int i = 0; i < img.h; i++)
 	{
@@ -73,18 +92,18 @@ void draw()
 
 				for(int l = 0; l < scale; l++)
 				{
-					fb[(h_pos + l) * screen->w + w_pos_k] = rgb;
+					set_pixel(w_pos_k, h_pos + l, fb, length, rgb);
 				}
 
 				if(grid)
-					fb[(h_pos + scale) * screen->w + w_pos_k] = rgb_grid;
+					set_pixel(w_pos_k, h_pos + scale, fb, length, rgb_grid);
 			}
 
 			if(grid)
 			{
 				for(int l = 0; l < scale; l++)
 				{
-					fb[(h_pos + l) * screen->w + (w_pos + scale)] = rgb_grid;
+					set_pixel(w_pos + scale, h_pos + l, fb, length, rgb_grid);
 				}
 			}
 		}
@@ -100,23 +119,7 @@ void set_curr_arg(int direction)
 	file_name = args[curr_arg + 1];
 }
 
-void update()
-{
-	int width = img.w * (scale + grid) + grid;
-	int height = img.h * (scale + grid) + grid;
-
-	if(!screen || (screen->w != width || screen->h != height))
-		resize_video(width, height);
-
-	SDL_WM_SetCaption(file_name, icon);
-	SDL_FillRect(screen, 0, 0);
-
-	draw();
-
-	x_grid_cell = y_grid_cell = 0;
-}
-
-void show_image(int direction)
+void read_image(int direction)
 {
 	int i = 0;
 
@@ -129,8 +132,6 @@ void show_image(int direction)
 			exiterr("No file is readable.\n");
 		i++;
 	}
-
-	update();
 }
 
 void draw_grid_cell(uint32_t rgb)
@@ -186,19 +187,29 @@ void change(int x_mouse, int y_mouse)
 	}
 }
 
+void redraw()
+{
+	x_grid_cell = 0;
+	y_grid_cell = 0;
+	SDL_FillRect(screen, 0, 0);
+	draw();
+}
+
 void handle_keydown(SDLKey key)
 {
 	switch(key)
 	{
 		case SDLK_g:
 			grid ^= 1;
-			update();
+			redraw();
 			break;
 		case SDLK_SPACE:
-			show_image(1);
+			read_image(1);
+			redraw();
 			break;
 		case SDLK_BACKSPACE:
-			show_image(-1);
+			read_image(-1);
+			redraw();
 			break;
 		case SDLK_q:
 		case SDLK_ESCAPE:
@@ -208,7 +219,7 @@ void handle_keydown(SDLKey key)
 			if(SDLK_0 < key && key <= SDLK_9)
 			{
 				scale = key - SDLK_0;
-				update();
+				redraw();
 			}
 			break;
 	}
@@ -220,6 +231,9 @@ void handle_event()
 
 	int mouse_x = -1;
 	int mouse_y = -1;
+	
+	int w = 0;
+	int h = 0;
 
 	while(SDL_PollEvent(&event))
 	{
@@ -232,6 +246,10 @@ void handle_event()
 			case SDL_KEYDOWN:
 				handle_keydown(event.key.keysym.sym);
 				break;
+			case SDL_VIDEORESIZE:
+				w = event.resize.w;
+				h = event.resize.h;
+				break;
 			case SDL_QUIT:
 				exit(0);
 				break;
@@ -242,6 +260,12 @@ void handle_event()
 
 	if(mouse_x != -1 && mouse_y != -1)
 		change(mouse_x, mouse_y);
+
+	if(w && h)
+	{
+		resize_video(w, h);
+		draw();
+	}
 }
 
 int main(int argc, char** argv)
@@ -254,6 +278,9 @@ int main(int argc, char** argv)
 	scale = 4;
 	grid = 0;
 
+	x_grid_cell = 0;
+	y_grid_cell = 0;
+
 	fb_dirty = 0;
 	args_num = argc;
 	args = argv;
@@ -264,7 +291,9 @@ int main(int argc, char** argv)
 		exiterr("SDL can not be initialized.\n");
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
-	show_image(1);
+	read_image(1);
+	resize_video(640, 480);
+	draw();
 
 	for(;;)
 	{
