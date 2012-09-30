@@ -30,6 +30,9 @@ int fb_dirty;
 int x_grid_cell;
 int y_grid_cell;
 
+int offset_x;
+int offset_y;
+
 void exiterr(const char* fmt, ...)
 {
 	va_list args;
@@ -75,15 +78,15 @@ void draw()
 
 	int length = screen->w * screen->h;
 
-	for (int i = 0; i < img.h; i++)
+	for(int i = offset_y; i < img.h; i++)
 	{
-		for (int j = 0; j < img.w; j++)
+		for(int j = offset_x; j < img.w; j++)
 		{
 			struct pixel p = img.pixels[i * img.w + j];
 			uint32_t rgb = (p.red << 16) | (p.green << 8) | (p.blue);
 
-			int w_pos = j * (scale + grid) + grid;
-			int h_pos = i * (scale + grid) + grid;
+			int w_pos = (j - offset_x) * (scale + grid) + grid;
+			int h_pos = (i - offset_y) * (scale + grid) + grid;
 
 			for(int k = 0; k < scale; k++)
 			{
@@ -196,16 +199,49 @@ void redraw()
 	x_grid_cell = 0;
 	y_grid_cell = 0;
 
+	if(img.w < (screen->w - grid) / (scale + grid))//minus offset
+		offset_x = 0;
+	if(img.h < (screen->h - grid) / (scale + grid))
+		offset_y = 0;
+
 	SDL_WM_SetCaption(filename, icon);
 	SDL_FillRect(screen, 0, 0);
 
 	draw();
 }
 
+void set_offset(int x, int y)
+{
+	int max_x = img.w - (screen->w - grid) / (scale + grid);
+	int max_y = img.h - (screen->h - grid) / (scale + grid);
+
+	int new_x = offset_x + x;
+	int new_y = offset_y + y;
+
+	offset_x = fmaxf(fminf(new_x, max_x), 0);
+	offset_y = fmaxf(fminf(new_y, max_y), 0);
+}
+
 void handle_keydown(SDLKey key)
 {
 	switch(key)
 	{
+		case SDLK_LEFT:
+			set_offset(-1, 0);
+			draw();
+			break;
+		case SDLK_UP:
+			set_offset(0, -1);
+			draw();
+			break;
+		case SDLK_RIGHT:
+			set_offset(1, 0);
+			draw();
+			break;
+		case SDLK_DOWN:
+			set_offset(0, 1);
+			draw();
+			break;
 		case SDLK_g:
 			grid ^= 1;
 			redraw();
@@ -271,7 +307,7 @@ void handle_event()
 	if(w && h)
 	{
 		resize_video(w, h);
-		draw();
+		redraw();
 	}
 }
 
@@ -287,6 +323,9 @@ int main(int argc, char** argv)
 
 	x_grid_cell = 0;
 	y_grid_cell = 0;
+
+	offset_x = 0;
+	offset_y = 0;
 
 	fb_dirty = 0;
 
