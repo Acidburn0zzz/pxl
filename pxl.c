@@ -21,10 +21,9 @@ int grid;
 
 int args_num;
 char** args;
-int curr_arg;
 
 struct image img;
-char* file_name;
+char* filename;
 
 int fb_dirty;
 
@@ -57,7 +56,7 @@ void resize_video(int w, int h)
 			exiterr("Could not get %dx%d window.\n", w, h);
 	}
 
-	SDL_WM_SetCaption(file_name, icon);
+	SDL_WM_SetCaption(filename, icon);
 	SDL_FillRect(screen, 0, 0);
 }
 
@@ -112,21 +111,26 @@ void draw()
 	fb_dirty = 1;
 }
 
-void set_curr_arg(int direction)
+void set_filename(int direction)
 {
-	int n = args_num - 1;
-	curr_arg = (curr_arg + n + direction) % n;
-	file_name = args[curr_arg + 1];
+	static int curr_arg = -1;
+
+	if(direction != 1 && direction != -1)
+		direction = 1;
+
+	curr_arg = (curr_arg + args_num + direction) % args_num;
+	filename = args[curr_arg + 1];
 }
 
 void read_image(int direction)
 {
 	int i = 0;
 
-	set_curr_arg(direction);
-	while(!read_ppm_P6(file_name, &img))
+	set_filename(direction);
+
+	while(!read_ppm_P6(filename, &img))
 	{
-		set_curr_arg(direction);
+		set_filename(direction);
 
 		if(i == args_num)
 			exiterr("No file is readable.\n");
@@ -182,7 +186,7 @@ void change(int x_mouse, int y_mouse)
 		int i = y * img.w + x;
 		struct pixel p = img.pixels[i];
 
-		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", file_name, x, y, p.red, p.green, p.blue);
+		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", filename, x, y, p.red, p.green, p.blue);
 		SDL_WM_SetCaption(caption, icon);
 	}
 }
@@ -191,7 +195,10 @@ void redraw()
 {
 	x_grid_cell = 0;
 	y_grid_cell = 0;
+
+	SDL_WM_SetCaption(filename, icon);
 	SDL_FillRect(screen, 0, 0);
+
 	draw();
 }
 
@@ -282,10 +289,9 @@ int main(int argc, char** argv)
 	y_grid_cell = 0;
 
 	fb_dirty = 0;
-	args_num = argc;
-	args = argv;
 
-	curr_arg = 0;
+	args_num = argc - 1;
+	args = argv;
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
 		exiterr("SDL can not be initialized.\n");
