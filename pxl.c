@@ -33,6 +33,9 @@ int y_grid_cell;
 int offset_x;
 int offset_y;
 
+int start_x;
+int start_y;
+
 void exiterr(const char* fmt, ...)
 {
 	va_list args;
@@ -78,15 +81,15 @@ void draw()
 
 	int length = screen->w * screen->h;
 
-	for(int i = offset_y; i < img.h; i++)
+	for(int i = start_y; i < img.h; i++)
 	{
-		for(int j = offset_x; j < img.w; j++)
+		for(int j = start_x; j < img.w; j++)
 		{
 			struct pixel p = img.pixels[i * img.w + j];
 			uint32_t rgb = (p.red << 16) | (p.green << 8) | (p.blue);
 
-			int w_pos = (j - offset_x) * (scale + grid) + grid;
-			int h_pos = (i - offset_y) * (scale + grid) + grid;
+			int w_pos = (j + offset_x) * (scale + grid) + grid;
+			int h_pos = (i + offset_y) * (scale + grid) + grid;
 
 			for(int k = 0; k < scale; k++)
 			{
@@ -144,7 +147,7 @@ void read_image(int direction)
 void draw_grid_cell(uint32_t rgb)
 {
 	uint32_t* fb = (uint32_t*) screen->pixels;
-	int w = screen->w;
+	int length = screen->w * screen->h;
 
 	int jump = scale + 1;
 	int line = scale + 2;
@@ -152,14 +155,14 @@ void draw_grid_cell(uint32_t rgb)
 	for(int i = 0; i < line; i++)
 	{
 		int x = x_grid_cell + i;
+		int y = y_grid_cell;
+		set_pixel(x, y, fb, length, rgb);
+		set_pixel(x, y + jump, fb, length, rgb);
 
-		fb[y_grid_cell * w + x] = rgb;
-		fb[(y_grid_cell + jump) * w + x] = rgb;
-
-		int y = (y_grid_cell + i) * w;
-
-		fb[y + x_grid_cell] = rgb;
-		fb[y + x_grid_cell + jump] = rgb;
+		x = x_grid_cell;
+		y = y_grid_cell + i;
+		set_pixel(x, y, fb, length, rgb);
+		set_pixel(x + jump, y, fb, length, rgb);
 	}
 
 	fb_dirty = 1;
@@ -194,15 +197,40 @@ void change(int x_mouse, int y_mouse)
 	}
 }
 
+void set_offset(int new_x, int new_y)
+{
+	int max_x = (screen->w - grid) / (scale + grid) - img.w;	
+	int max_y = (screen->h - grid) / (scale + grid) - img.h;
+
+	if(max_x > 0)
+	{
+		offset_x = (int)(max_x * 0.5f);
+		start_x = 0;
+	}
+	else
+	{
+		offset_x = fminf(fmaxf(new_x, max_x), 0);
+		start_x = -offset_x;
+	}
+
+	if(max_y > 0)
+	{
+		offset_y = (int)(max_y * 0.5);
+		start_y = 0;
+	}
+	else
+	{
+		offset_y = fminf(fmaxf(new_y, max_y), 0);
+		start_y = -offset_y;
+	}
+}
+
 void redraw()
 {
 	x_grid_cell = 0;
 	y_grid_cell = 0;
 
-	if(img.w < (screen->w - grid) / (scale + grid))//minus offset
-		offset_x = 0;
-	if(img.h < (screen->h - grid) / (scale + grid))
-		offset_y = 0;
+	set_offset(offset_x, offset_y);
 
 	SDL_WM_SetCaption(filename, icon);
 	SDL_FillRect(screen, 0, 0);
@@ -210,36 +238,24 @@ void redraw()
 	draw();
 }
 
-void set_offset(int x, int y)
-{
-	int max_x = img.w - (screen->w - grid) / (scale + grid);
-	int max_y = img.h - (screen->h - grid) / (scale + grid);
-
-	int new_x = offset_x + x;
-	int new_y = offset_y + y;
-
-	offset_x = fmaxf(fminf(new_x, max_x), 0);
-	offset_y = fmaxf(fminf(new_y, max_y), 0);
-}
-
 void handle_keydown(SDLKey key)
 {
 	switch(key)
 	{
 		case SDLK_LEFT:
-			set_offset(-1, 0);
+			set_offset(offset_x - 1, offset_y);
 			draw();
 			break;
 		case SDLK_UP:
-			set_offset(0, -1);
+			set_offset(offset_x, offset_y - 1);
 			draw();
 			break;
 		case SDLK_RIGHT:
-			set_offset(1, 0);
+			set_offset(offset_x + 1, offset_y);
 			draw();
 			break;
 		case SDLK_DOWN:
-			set_offset(0, 1);
+			set_offset(offset_x, offset_y + 1);
 			draw();
 			break;
 		case SDLK_g:
@@ -326,6 +342,9 @@ int main(int argc, char** argv)
 
 	offset_x = 0;
 	offset_y = 0;
+
+	start_x = 0;
+	start_y = 0;
 
 	fb_dirty = 0;
 
