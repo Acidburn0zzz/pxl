@@ -177,7 +177,8 @@ void change(int x_mouse, int y_mouse)
 	int x = x_mouse / step;
 	int y = y_mouse / step;
 
-	if((0 <= x && x < img.w) && (0 <= y && y < img.h))
+	if((offset_x <= x && x < (img.w + offset_x)) 
+	&& (offset_y <= y && y < (img.h + offset_y)))
 	{
 		if(grid)
 		{
@@ -189,12 +190,16 @@ void change(int x_mouse, int y_mouse)
 			draw_grid_cell(0x00dddddd);
 		}
 
-		int i = y * img.w + x;
-		struct pixel p = img.pixels[i];
+		x -= offset_x;
+		y -= offset_y;
+		struct pixel p = img.pixels[y * img.w + x];
 
 		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", filename, x, y, p.red, p.green, p.blue);
-		SDL_WM_SetCaption(caption, icon);
 	}
+	else
+		snprintf(caption, 50, "%s", filename);
+
+	SDL_WM_SetCaption(caption, icon);
 }
 
 void set_offset(int new_x, int new_y)
@@ -202,7 +207,7 @@ void set_offset(int new_x, int new_y)
 	int max_x = (screen->w - grid) / (scale + grid) - img.w;	
 	int max_y = (screen->h - grid) / (scale + grid) - img.h;
 
-	if(max_x > 0)
+	if(max_x >= 0)
 	{
 		offset_x = (int)(max_x * 0.5f);
 		start_x = 0;
@@ -213,7 +218,7 @@ void set_offset(int new_x, int new_y)
 		start_x = -offset_x;
 	}
 
-	if(max_y > 0)
+	if(max_y >= 0)
 	{
 		offset_y = (int)(max_y * 0.5);
 		start_y = 0;
