@@ -293,9 +293,14 @@ void handle_event()
 {
 	SDL_Event event;
 
+	static int mousebuttonleft_down = 0;
+
 	int mouse_x = -1;
 	int mouse_y = -1;
-	
+
+	int mouse_xrel = 0;
+	int mouse_yrel = 0;
+
 	int w = 0;
 	int h = 0;
 
@@ -306,9 +311,19 @@ void handle_event()
 			case SDL_MOUSEMOTION:
 				mouse_x = event.motion.x;
 				mouse_y = event.motion.y;
+				mouse_xrel += event.motion.xrel;
+				mouse_yrel += event.motion.yrel;
 				break;
 			case SDL_KEYDOWN:
 				handle_keydown(event.key.keysym.sym);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if(event.button.button == SDL_BUTTON_LEFT)
+					mousebuttonleft_down = 1;
+				break;
+			case SDL_MOUSEBUTTONUP:
+				if(event.button.button == SDL_BUTTON_LEFT)
+					mousebuttonleft_down = 0;
 				break;
 			case SDL_VIDEORESIZE:
 				w = event.resize.w;
@@ -320,6 +335,12 @@ void handle_event()
 			default:
 				break;
 		}
+	}
+
+	if(mousebuttonleft_down)
+	{
+		set_offset(offset_x + mouse_xrel, offset_y + mouse_yrel);
+		draw();
 	}
 
 	if(mouse_x != -1 && mouse_y != -1)
