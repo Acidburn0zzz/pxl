@@ -268,8 +268,10 @@ void redraw()
 	draw();
 }
 
-void handle_keydown(SDLKey key)
+void handle_keydown(SDL_KeyboardEvent* event)
 {
+	SDLKey key = event->keysym.sym;
+
 	switch(key)
 	{
 		case SDLK_LEFT:
@@ -304,10 +306,14 @@ void handle_keydown(SDLKey key)
 		case SDLK_ESCAPE:
 			exit(0);
 			break;
+
 		default:
 			if(SDLK_0 < key && key <= SDLK_9)
 			{
 				scale = key - SDLK_0;
+				if((event->keysym.mod & KMOD_LSHIFT) || (event->keysym.mod & KMOD_RSHIFT))
+					scale = 1 << scale;
+
 				redraw();
 			}
 			break;
@@ -340,7 +346,7 @@ void handle_event()
 				mouse_yrel += event.motion.yrel;
 				break;
 			case SDL_KEYDOWN:
-				handle_keydown(event.key.keysym.sym);
+				handle_keydown(&event.key);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if(event.button.button == SDL_BUTTON_LEFT)
@@ -385,7 +391,7 @@ int main(int argc, char** argv)
 
 	img.pixels = 0;
 
-	scale = 4;
+	scale = 1;
 	grid = 0;
 
 	x_grid_cell = 0;
