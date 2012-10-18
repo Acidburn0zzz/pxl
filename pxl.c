@@ -74,23 +74,48 @@ void set_pixel(int x, int y, uint32_t* fb, int length, uint32_t rgb)
 		fb[i] = rgb;
 }
 
+void get_color(int x, int y, uint32_t* color)
+{
+	if(x < img.w && y < img.h)
+	{
+		struct pixel p = img.pixels[y * img.w + x];
+		*color = (p.red << 16) | (p.green << 8) | (p.blue);
+	}
+}
+
 void draw()
 {
-	uint32_t rgb_grid = 0;
+	int step = scale + grid;
+	//uint32_t rgb_grid = 0;
 	uint32_t* fb = (uint32_t*) screen->pixels;
 
-	int length = screen->w * screen->h;
+	int w = screen->w;
+	int h = screen->h;
 
-	for(int i = start_y; i < img.h; i++)
+//TODO: fix offset
+	offset_x = 0;
+	offset_y = 0;
+	//int length = screen->w * screen->h;
+
+	for(int y = 0; y < h; y++)
 	{
-		for(int j = start_x; j < img.w; j++)
+		int r_j = (y + offset_y - grid) % step;
+		int j = (y + offset_y - grid) / step;
+
+		for(int x = 0; x < w; x++)
 		{
-			struct pixel p = img.pixels[i * img.w + j];
-			uint32_t rgb = (p.red << 16) | (p.green << 8) | (p.blue);
+			int r_i = (x + offset_x - grid) % step;
+			int i = (x + offset_x - grid) / step;
+			uint32_t rgb = 0x00000000;
 
-			int w_pos = (j + offset_x) * (scale + grid) + grid;
-			int h_pos = (i + offset_y) * (scale + grid) + grid;
+			if(0 <= r_i && 0 <= r_j)
+			{
+				if(!grid || (r_i != scale && r_j != scale))
+					get_color(i, j, &rgb);
+			}
 
+			fb[y * w + x] = rgb;
+/*
 			for(int k = 0; k < scale; k++)
 			{
 				int w_pos_k = w_pos + k;
@@ -110,7 +135,7 @@ void draw()
 				{
 					set_pixel(w_pos + scale, h_pos + l, fb, length, rgb_grid);
 				}
-			}
+			}*/
 		}
 	}
 
@@ -174,8 +199,8 @@ void change(int x_mouse, int y_mouse)
 
 	int step = scale + grid;
 
-	int x = x_mouse / step;
-	int y = y_mouse / step;
+	int x = (x_mouse - grid) / step;
+	int y = (y_mouse - grid) / step;
 
 	if((offset_x <= x && x < (img.w + offset_x)) 
 	&& (offset_y <= y && y < (img.h + offset_y)))
@@ -204,8 +229,8 @@ void change(int x_mouse, int y_mouse)
 
 void set_offset(int new_x, int new_y)
 {
-	int max_x = (screen->w - grid) / (scale + grid) - img.w;	
-	int max_y = (screen->h - grid) / (scale + grid) - img.h;
+	int max_x = (img.w * (scale + grid) + grid) - screen->w;	
+	int max_y = (img.h * (scale + grid) + grid) - screen->h;
 
 	if(max_x >= 0)
 	{
