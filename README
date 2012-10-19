@@ -9,6 +9,7 @@ usage:
 
 keybindings:
 1 .. 9 = zoom value
+Shift + {1 .. 9} = zoom value 2 ^ {1 .. 9}
 g = toggle grid
 space = show next image
 backspace = show prev image
