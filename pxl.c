@@ -67,7 +67,7 @@ void set_pixel(int x, int y, uint32_t* fb, int length, uint32_t rgb)
 {
 	int i = y * screen->w + x;
 
-	if((0 <= i && i < length) && (x < screen->w && y < screen->h))
+	if((0 <= i && i < length) && ((0 <= x && x < screen->w) && (0 <= y && y < screen->h)))
 		fb[i] = rgb;
 }
 
@@ -193,6 +193,9 @@ void change(int mouse_x, int mouse_y)
 
 void set_offset(int new_x, int new_y)
 {
+	int old_x = offset_x;
+	int old_y = offset_y;
+
 	int max_x = screen->w - (img.w * (scale + grid) + grid);	
 	int max_y = screen->h - (img.h * (scale + grid) + grid);
 
@@ -205,13 +208,13 @@ void set_offset(int new_x, int new_y)
 		offset_y = (int)(max_y * 0.5);
 	else
 		offset_y = fminf(fmaxf(new_y, max_y), 0);
+
+	x_grid_cell += offset_x - old_x;
+	y_grid_cell += offset_y - old_y;
 }
 
 void redraw()
 {
-	x_grid_cell = 0;
-	y_grid_cell = 0;
-
 	set_offset(offset_x, offset_y);
 
 	SDL_WM_SetCaption(filename, icon);
@@ -320,13 +323,12 @@ void handle_event()
 		}
 	}
 
-	if(mousebuttonleft_down)
+	if(mousebuttonleft_down && (mouse_xrel || mouse_yrel))
 	{
 		set_offset(offset_x + mouse_xrel, offset_y + mouse_yrel);
 		draw();
 	}
-
-	if(mouse_x != -1 && mouse_y != -1)
+	else if(mouse_x != -1 && mouse_y != -1)
 		change(mouse_x, mouse_y);
 
 	if(w && h)
@@ -363,6 +365,7 @@ int main(int argc, char** argv)
 
 	read_image(1);
 	resize_video(640, 480);
+	set_offset(0, 0);
 	draw();
 
 	for(;;)
