@@ -292,6 +292,11 @@ void handle_keydown(SDL_KeyboardEvent* event)
 				scale = 1 << (key - SDLK_0);
 				redraw();
 			}
+			else if(SDLK_KP0 <= key && key <= SDLK_KP9)
+			{
+				scale = 1 << (key - SDLK_KP0);
+				redraw();
+			}
 			break;
 	}
 }
