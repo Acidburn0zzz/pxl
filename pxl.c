@@ -181,14 +181,16 @@ void draw_grid_cell(uint32_t rgb)
 void change(int mouse_x, int mouse_y)
 {
 	int step = scale + grid;
+	static int old_scale = 1;
 
 	int x = (mouse_x - offset_x - grid) / step;
 	int y = (mouse_y - offset_y - grid) / step;
 
 	SDL_ShowCursor(grid ^ 1);
 
-	if(grid)
+	if(grid && old_scale == scale)
 		draw_grid_cell(0);
+	old_scale = scale;
 
 	if((0 <= x && x < img.w) && (0 <= y && y < img.h))
 	{
@@ -337,19 +339,21 @@ void handle_event()
 		}
 	}
 
-	if(mousebuttonleft_down && (mouse_xrel || mouse_yrel))
-	{
-		set_offset(offset_x + mouse_xrel, offset_y + mouse_yrel);
-		draw();
-	}
-
-	if(mouse_x != -1 && mouse_y != -1)
-		change(mouse_x, mouse_y);
-
 	if(w && h)
 	{
 		resize_video(w, h);
 		redraw();
+	}
+	else
+	{
+		if(mousebuttonleft_down && (mouse_xrel || mouse_yrel))
+		{
+			set_offset(offset_x + mouse_xrel, offset_y + mouse_yrel);
+			draw();
+		}
+
+		if(mouse_x != -1 && mouse_y != -1)
+			change(mouse_x, mouse_y);
 	}
 }
 
