@@ -172,12 +172,15 @@ void change(int mouse_x, int mouse_y)
 	int x = (mouse_x - offset_x - grid) / step;
 	int y = (mouse_y - offset_y - grid) / step;
 
+	SDL_ShowCursor(grid ^ 1);
+
+	if(grid)
+		draw_grid_cell(0);
+
 	if((0 <= x && x < img.w) && (0 <= y && y < img.h))
 	{
 		if(grid)
 		{
-			draw_grid_cell(0);
-
 			x_grid_cell = x * step + offset_x;
 			y_grid_cell = y * step + offset_y;
 
@@ -189,6 +192,8 @@ void change(int mouse_x, int mouse_y)
 		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", filename, x, y, p.red, p.green, p.blue);
 		SDL_WM_SetCaption(caption, icon);
 	}
+	else 
+		SDL_ShowCursor(1);
 }
 
 void set_offset(int new_x, int new_y)
@@ -328,7 +333,8 @@ void handle_event()
 		set_offset(offset_x + mouse_xrel, offset_y + mouse_yrel);
 		draw();
 	}
-	else if(mouse_x != -1 && mouse_y != -1)
+
+	if(mouse_x != -1 && mouse_y != -1)
 		change(mouse_x, mouse_y);
 
 	if(w && h)
