@@ -42,6 +42,22 @@ void exiterr(const char* fmt, ...)
 	exit(1);
 }
 
+void set_default_caption()
+{
+	char c[100];
+
+	snprintf(c, 100, "%s zoom=%d", filename, scale);
+	SDL_WM_SetCaption(c, icon);
+}
+
+void set_caption(int x, int y, int r, int g, int b)
+{
+	char c[100];
+
+	snprintf(c, 100, "%s zoom=%d [%d x %d] (%d; %d; %d)", filename, scale, x, y, r, g, b);
+	SDL_WM_SetCaption(c, icon);
+}
+
 void resize_video(int w, int h)
 {
 	if(!screen || (screen->w != w || screen->h != h))
@@ -59,8 +75,7 @@ void resize_video(int w, int h)
 			exiterr("Could not get %dx%d window.\n", w, h);
 	}
 
-	SDL_WM_SetCaption(filename, icon);
-	SDL_FillRect(screen, 0, 0);
+	set_default_caption();
 }
 
 void set_pixel(int x, int y, uint32_t* fb, int length, uint32_t rgb)
@@ -165,8 +180,6 @@ void draw_grid_cell(uint32_t rgb)
 
 void change(int mouse_x, int mouse_y)
 {
-	char caption[100];
-
 	int step = scale + grid;
 
 	int x = (mouse_x - offset_x - grid) / step;
@@ -188,12 +201,13 @@ void change(int mouse_x, int mouse_y)
 		}
 
 		struct pixel p = img.pixels[y * img.w + x];
-
-		snprintf(caption, 100, "%s [%d x %d] (%d; %d; %d)", filename, x, y, p.red, p.green, p.blue);
-		SDL_WM_SetCaption(caption, icon);
+		set_caption(x, y, p.red, p.green, p.blue);
 	}
 	else 
+	{
 		SDL_ShowCursor(1);
+		set_default_caption();
+	}
 }
 
 void set_offset(int new_x, int new_y)
@@ -221,9 +235,7 @@ void set_offset(int new_x, int new_y)
 void redraw()
 {
 	set_offset(offset_x, offset_y);
-
-	SDL_WM_SetCaption(filename, icon);
-	SDL_FillRect(screen, 0, 0);
+	set_default_caption();
 
 	draw();
 }
