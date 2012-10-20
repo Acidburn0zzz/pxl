@@ -280,12 +280,9 @@ void handle_keydown(SDL_KeyboardEvent* event)
 			break;
 
 		default:
-			if(SDLK_0 < key && key <= SDLK_9)
+			if(SDLK_0 <= key && key <= SDLK_9)
 			{
-				scale = key - SDLK_0;
-				if((event->keysym.mod & KMOD_LSHIFT) || (event->keysym.mod & KMOD_RSHIFT))
-					scale = 1 << scale;
-
+				scale = 1 << (key - SDLK_0);
 				redraw();
 			}
 			break;
