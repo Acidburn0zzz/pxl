@@ -13,6 +13,7 @@ keybindings:
 -----------
 {0 .. 9} = zoom value 2 ^ {0 .. 9}
 g = toggle grid
+arrow keys = scrolling in screen size steps
 Space = show next image
 Backspace = show prev image
 q or ESC = quit

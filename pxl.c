@@ -242,6 +242,15 @@ void redraw()
 	draw();
 }
 
+void jump(int xrel, int yrel)
+{
+	int xstep = xrel * screen->w;
+	int ystep = yrel * screen->h;
+
+	set_offset(offset_x + xstep, offset_y + ystep);
+	draw();
+}
+
 void handle_keydown(SDL_KeyboardEvent* event)
 {
 	SDLKey key = event->keysym.sym;
@@ -249,20 +258,16 @@ void handle_keydown(SDL_KeyboardEvent* event)
 	switch(key)
 	{
 		case SDLK_LEFT:
-			set_offset(offset_x - 1, offset_y);
-			draw();
+			jump(1, 0);
 			break;
 		case SDLK_UP:
-			set_offset(offset_x, offset_y - 1);
-			draw();
+			jump(0, 1);
 			break;
 		case SDLK_RIGHT:
-			set_offset(offset_x + 1, offset_y);
-			draw();
+			jump(-1, 0);
 			break;
 		case SDLK_DOWN:
-			set_offset(offset_x, offset_y + 1);
-			draw();
+			jump(0, -1);
 			break;
 		case SDLK_g:
 			grid ^= 1;
