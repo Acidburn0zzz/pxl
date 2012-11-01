@@ -96,9 +96,22 @@ void draw_tile(int size, int x0, int y0, uint32_t color)
 			fb0[x] = color;
 }
 
+void draw_partial(int size, int x0, int y0, uint32_t color)
+{	
+	uint32_t* fb = (uint32_t*)screen->pixels;
+	int w = screen->w;
+	int h = screen->h;
+
+	for(int y = y0; y < (y0 + size); y++)
+		for(int x = x0; x < (x0 + size); x++)
+			if((0 <= x && x < w) && (0 <= y && y < h))
+				fb[y * w + x] = color;
+}
+
 void draw()
 {
 	int step = scale + grid;
+	SDL_FillRect(screen, 0, 0);
 
 	// calc interval (a, b) for whole tiles in image coordinates
 	int xa = (max(-offset_x, 0) + (step - 1)) / step;
@@ -106,13 +119,35 @@ void draw()
 	int xb = (max(-offset_x, 0) + min(img.w * step, screen->w)) / step;
 	int yb = (max(-offset_y, 0) + min(img.h * step, screen->h)) / step;
 
-	SDL_FillRect(screen, 0, 0);
-
 	uint32_t* pa = img.pixels + ya * img.w;
 
 	for(int y = ya, y0 = ya * step + offset_y + grid; y < yb; y++, y0 += step, pa += img.w)
 		for(int x = xa, x0 = xa * step + offset_x + grid; x < xb; x++, x0 += step)
 			draw_tile(scale, x0, y0, pa[x]);
+
+	// calc interval (c, d) for partial tiles in image coordinates
+	int xc = max(-offset_x, 0) / step;
+	int yc = max(-offset_y, 0) / step;
+	int xd = (max(-offset_x, 0) + min(img.w * step, screen->w) + (step - 1)) / step;
+	int yd = (max(-offset_y, 0) + min(img.h * step, screen->h) + (step - 1)) / step;
+
+	uint32_t* pc = img.pixels + yc * img.w;
+
+	for(int y = yc, y0 = yc * step + offset_y + grid; y < yd; y++, y0 += step, pc += img.w)
+	{
+		for(int x = xc, x0 = xc * step + offset_x + grid; x < xd; x++, x0 += step)
+		{
+			if((x >= xa) && (y >= ya) && (y < yb))
+			{
+				x = xb;
+				x0 = xb * step + offset_x + grid;
+
+				if (x >= xd)
+					break;
+			}
+			draw_partial(scale, x0, y0, pc[x]);
+		}
+	}
 
 	fb_dirty = 1;
 }
