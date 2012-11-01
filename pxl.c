@@ -27,8 +27,8 @@ char* filename;
 
 int fb_dirty;
 
-int x_grid_cell;
-int y_grid_cell;
+int last_cell_x;
+int last_cell_y;
 
 int offset_x;
 int offset_y;
@@ -163,13 +163,13 @@ void draw_grid_cell(uint32_t rgb)
 
 	for(int i = 0; i < line; i++)
 	{
-		int x = x_grid_cell + i;
-		int y = y_grid_cell;
+		int x = last_cell_x + i;
+		int y = last_cell_y;
 		set_pixel(x, y, fb, rgb);
 		set_pixel(x, y + jump, fb, rgb);
 
-		x = x_grid_cell;
-		y = y_grid_cell + i;
+		x = last_cell_x;
+		y = last_cell_y + i;
 		set_pixel(x, y, fb, rgb);
 		set_pixel(x + jump, y, fb, rgb);
 	}
@@ -195,8 +195,8 @@ void change(int mouse_x, int mouse_y)
 	{
 		if(grid)
 		{
-			x_grid_cell = x * step + offset_x;
-			y_grid_cell = y * step + offset_y;
+			last_cell_x = x * step + offset_x;
+			last_cell_y = y * step + offset_y;
 
 			draw_grid_cell(0x00dddddd);
 		}
@@ -229,8 +229,8 @@ void set_offset(int new_x, int new_y)
 	else
 		offset_y = fminf(fmaxf(new_y, max_y), 0);
 
-	x_grid_cell += offset_x - old_x;
-	y_grid_cell += offset_y - old_y;
+	last_cell_x += offset_x - old_x;
+	last_cell_y += offset_y - old_y;
 }
 
 void redraw()
@@ -376,8 +376,8 @@ int main(int argc, char** argv)
 	scale = 1;
 	grid = 0;
 
-	x_grid_cell = 0;
-	y_grid_cell = 0;
+	last_cell_x = 0;
+	last_cell_y = 0;
 
 	offset_x = 0;
 	offset_y = 0;
