@@ -108,7 +108,7 @@ void draw()
 
 	SDL_FillRect(screen, 0, 0);
 
-	uint32_t* pa = img.pixels + ya * img.w + xa;
+	uint32_t* pa = img.pixels + ya * img.w;
 
 	for(int y = ya, y0 = ya * step + offset_y + grid; y < yb; y++, y0 += step, pa += img.w)
 		for(int x = xa, x0 = xa * step + offset_x + grid; x < xb; x++, x0 += step)
