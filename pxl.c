@@ -87,9 +87,8 @@ void set_pixel(int x, int y, uint32_t* fb, uint32_t rgb)
 		fb[i] = rgb;
 }
 
-void draw_tile(int size, int x0, int y0, struct pixel* p)
+void draw_tile(int size, int x0, int y0, uint32_t color)
 {	
-	uint32_t color = (p->red << 16) | (p->green << 8) | (p->blue);
 	uint32_t* fb0 = (uint32_t*)screen->pixels + x0 + screen->w * y0;
 
 	for(int y = 0; y < size; y++, fb0 += screen->w)
@@ -109,11 +108,11 @@ void draw()
 
 	SDL_FillRect(screen, 0, 0);
 
-	struct pixel* pa = img.pixels + ya * img.w + xa;
+	uint32_t* pa = img.pixels + ya * img.w + xa;
 
 	for(int y = ya, y0 = ya * step + offset_y + grid; y < yb; y++, y0 += step, pa += img.w)
 		for(int x = xa, x0 = xa * step + offset_x + grid; x < xb; x++, x0 += step)
-			draw_tile(scale, x0, y0, pa + x);
+			draw_tile(scale, x0, y0, pa[x]);
 
 	fb_dirty = 1;
 }
@@ -192,8 +191,8 @@ void change(int mouse_x, int mouse_y)
 			draw_grid_cell(0x00dddddd);
 		}
 
-		struct pixel p = img.pixels[y * img.w + x];
-		set_caption(x, y, p.red, p.green, p.blue);
+		uint32_t p = img.pixels[y * img.w + x];
+		set_caption(x, y, (p >> 16) & 255, (p >> 8) & 255, p & 255);
 	}
 	else 
 	{

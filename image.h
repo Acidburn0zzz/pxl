@@ -8,14 +8,11 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 #ifndef IMAGE_H
 #define IMAGE_H
 
-struct pixel
-{
-	unsigned char red, green, blue;
-};
+#include <stdint.h>
 
 struct image 
 {
-	struct pixel* pixels;
+	uint32_t* pixels;
 	int w, h;
 };
 

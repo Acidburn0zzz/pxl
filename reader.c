@@ -9,6 +9,11 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 #include <stdlib.h>
 #include "reader.h"
 
+struct pixel
+{
+	unsigned char red, green, blue;
+};
+
 int read_ppm_P6(const char* filename, struct image *img)
 {
 	int c, rgb;
@@ -68,21 +73,22 @@ int read_ppm_P6(const char* filename, struct image *img)
 		fprintf(stderr, "Sorry, can not read image \"%s\". Only 24bit images supported.\n", filename);
 		return 0;
 	}
-	
-	size_t bytes = sizeof(struct pixel) * img->w * img->h;
 
 	free(img->pixels);
-	img->pixels = (struct pixel*)malloc(bytes);
-	if(!img->pixels)
+	
+	size_t bytes = sizeof(struct pixel) * img->w * img->h;
+	struct pixel* pixels = (struct pixel*)malloc(bytes);
+
+	if(!pixels)
 	{
 		fclose(f);
 		fprintf(stderr, "Unable to allocate memory for %dx%d image \"%s\".\n", img->w, img->h, filename);
 		return 0;
 	}
 
-	if(fread(img->pixels, bytes, 1, f) != 1)
+	if(fread(pixels, bytes, 1, f) != 1)
 	{
-		free(img->pixels);
+		free(pixels);
 		img->pixels = 0;
 		fclose(f);
 		fprintf(stderr, "Error loading image \"%s\".\n", filename);
@@ -90,6 +96,13 @@ int read_ppm_P6(const char* filename, struct image *img)
 	}
 
 	fclose(f);
+
+	img->pixels = (uint32_t*)malloc(sizeof(uint32_t) * img->w * img->h);
+	for (int i = 0; i < img->w * img->h; i++)
+		img->pixels[i] = (pixels[i].red << 16) | (pixels[i].green << 8) | (pixels[i].blue);
+
+	free(pixels);
+
 	return 1;
 }
 
