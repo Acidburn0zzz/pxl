@@ -10,6 +10,7 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 #include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
+#include "utils.h"
 #include "image.h"
 #include "reader.h"
 
@@ -220,14 +221,14 @@ void set_offset(int new_x, int new_y)
 	int max_y = screen->h - (img.h * (scale + grid) + grid);
 
 	if(max_x >= 0)
-		offset_x = (int)(max_x * 0.5f);
+		offset_x = max_x / 2;
 	else
-		offset_x = fminf(fmaxf(new_x, max_x), 0);
+		offset_x = min(max(new_x, max_x), 0);
 
 	if(max_y >= 0)
-		offset_y = (int)(max_y * 0.5);
+		offset_y = max_y / 2;
 	else
-		offset_y = fminf(fmaxf(new_y, max_y), 0);
+		offset_y = min(max(new_y, max_y), 0);
 
 	last_cell_x += offset_x - old_x;
 	last_cell_y += offset_y - old_y;
