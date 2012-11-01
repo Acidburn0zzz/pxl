@@ -137,13 +137,11 @@ void draw()
 	{
 		for(int x = xc, x0 = xc * step + offset_x + grid; x < xd; x++, x0 += step)
 		{
-			if((x >= xa) && (y >= ya) && (y < yb))
+			if((x >= xa) && (x < xb) && (y >= ya) && (y < yb))
 			{
-				x = xb;
-				x0 = xb * step + offset_x + grid;
-
-				if (x >= xd)
-					break;
+				x = xb - 1;
+				x0 = (xb - 1) * step + offset_x + grid;
+				continue;
 			}
 			draw_partial(scale, x0, y0, pc[x]);
 		}
