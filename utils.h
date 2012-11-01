@@ -24,4 +24,13 @@ int clamp(int v, int min, int max)
 	return (tmp > max) ? max : tmp;
 }
 
+int ilog2(int v)
+{
+	int r = 0;
+	while(v >>= 1)
+		r++;
+
+	return r;
+}
+
 #endif
