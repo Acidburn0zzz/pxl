@@ -78,11 +78,11 @@ void resize_video(int w, int h)
 	set_default_caption();
 }
 
-void set_pixel(int x, int y, uint32_t* fb, int length, uint32_t rgb)
+void set_pixel(int x, int y, uint32_t* fb, uint32_t rgb)
 {
 	int i = y * screen->w + x;
 
-	if((0 <= i && i < length) && ((0 <= x && x < screen->w) && (0 <= y && y < screen->h)))
+	if((0 <= x && x < screen->w) && (0 <= y && y < screen->h))
 		fb[i] = rgb;
 }
 
@@ -157,7 +157,6 @@ void read_image(int direction)
 void draw_grid_cell(uint32_t rgb)
 {
 	uint32_t* fb = (uint32_t*) screen->pixels;
-	int length = screen->w * screen->h;
 
 	int jump = scale + 1;
 	int line = scale + 2;
@@ -166,13 +165,13 @@ void draw_grid_cell(uint32_t rgb)
 	{
 		int x = x_grid_cell + i;
 		int y = y_grid_cell;
-		set_pixel(x, y, fb, length, rgb);
-		set_pixel(x, y + jump, fb, length, rgb);
+		set_pixel(x, y, fb, rgb);
+		set_pixel(x, y + jump, fb, rgb);
 
 		x = x_grid_cell;
 		y = y_grid_cell + i;
-		set_pixel(x, y, fb, length, rgb);
-		set_pixel(x + jump, y, fb, length, rgb);
+		set_pixel(x, y, fb, rgb);
+		set_pixel(x + jump, y, fb, rgb);
 	}
 
 	fb_dirty = 1;
