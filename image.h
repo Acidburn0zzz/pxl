@@ -1,4 +1,3 @@
-
 /*
 pxl - ppm image viewer
 Written in 2012 by <Olga Miller> <olga.rgb@googlemail.com>
