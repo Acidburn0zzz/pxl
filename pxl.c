@@ -96,6 +96,17 @@ void get_color(int x, int y, uint32_t* color)
 	}
 }
 
+void draw_tile(int size, int i, int j, int x0, int y0, uint32_t* fb)
+{	
+	struct pixel p = img.pixels[j * img.w + i];
+	uint32_t color = (p.red << 16) | (p.green << 8) | (p.blue);
+	uint32_t* fb_off = fb + x0 + screen->w * y0;
+
+	for(int y = 0; y < size; y++)
+		for(int x = 0; x < size; x++)
+			fb_off[y * screen->w + x] = color;
+}
+
 void draw()
 {
 	int step = scale + grid;
@@ -104,26 +115,17 @@ void draw()
 	int w = screen->w;
 	int h = screen->h;
 
-	for(int y = 0; y < h; y++)
-	{
-		int r_j = (y - offset_y - grid) % step;
-		int j = (y - offset_y - grid) / step;
+	// calc interval (a, b) for whole tiles in image coordinates
+	int xa = (max(-offset_x, 0) + (step - 1)) / step;
+	int ya = (max(-offset_y, 0) + (step - 1)) / step;
+	int xb = (max(-offset_x, 0) + min(img.w * step, w)) / step;
+	int yb = (max(-offset_y, 0) + min(img.h * step, h)) / step;
 
-		for(int x = 0; x < w; x++)
-		{
-			int r_i = (x -  offset_x - grid) % step;
-			int i = (x - offset_x - grid) / step;
-			uint32_t rgb = 0x00000000;
+	SDL_FillRect(screen, 0, 0);
 
-			if(0 <= r_i && 0 <= r_j)
-			{
-				if(!grid || (r_i != scale && r_j != scale))
-					get_color(i, j, &rgb);
-			}
-
-			fb[y * w + x] = rgb;
-		}
-	}
+	for(int y = ya, y0 = ya * step + offset_y + grid; y < yb; y++, y0 += step)
+		for(int x = xa, x0 = xa * step + offset_x + grid; x < xb; x++, x0 += step)
+			draw_tile(scale, x, y, x0, y0, fb);
 
 	fb_dirty = 1;
 }
