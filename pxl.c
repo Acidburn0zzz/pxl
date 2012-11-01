@@ -87,15 +87,6 @@ void set_pixel(int x, int y, uint32_t* fb, uint32_t rgb)
 		fb[i] = rgb;
 }
 
-void get_color(int x, int y, uint32_t* color)
-{
-	if((0 <= x && x < img.w) && (0 <= y && y < img.h))
-	{
-		struct pixel p = img.pixels[y * img.w + x];
-		*color = (p.red << 16) | (p.green << 8) | (p.blue);
-	}
-}
-
 void draw_tile(int size, int i, int j, int x0, int y0, uint32_t* fb)
 {	
 	struct pixel p = img.pixels[j * img.w + i];
