@@ -244,8 +244,8 @@ void redraw()
 
 void jump(int xrel, int yrel)
 {
-	int xstep = xrel * screen->w;
-	int ystep = yrel * screen->h;
+	int xstep = xrel * screen->w / 2;
+	int ystep = yrel * screen->h / 2;
 
 	set_offset(offset_x + xstep, offset_y + ystep);
 	draw();
