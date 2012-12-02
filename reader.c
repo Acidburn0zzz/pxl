@@ -71,8 +71,8 @@ int read_ppm_P6(const char* filename, struct image *img)
 		return 0;
 	}
 
-	img->w = integer[0];
-	img->h = integer[1];
+	int w = integer[0];
+	int h = integer[1];
 	rgb = integer[2];
 
 	if(rgb != 255)
@@ -82,32 +82,32 @@ int read_ppm_P6(const char* filename, struct image *img)
 		return 0;
 	}
 
-	free(img->pixels);
-
-	size_t bytes = sizeof(struct pixel) * img->w * img->h;
+	size_t bytes = sizeof(struct pixel) * w * h;
 	struct pixel* pixels = (struct pixel*)malloc(bytes);
 
 	if(!pixels)
 	{
 		fclose(f);
-		fprintf(stderr, "Unable to allocate memory for %dx%d image \"%s\".\n", img->w, img->h, filename);
+		fprintf(stderr, "Unable to allocate memory for %dx%d image \"%s\".\n", w, h, filename);
 		return 0;
 	}
 
 	if(fread(pixels, bytes, 1, f) != 1)
 	{
 		free(pixels);
-		img->pixels = 0;
 		fclose(f);
 		fprintf(stderr, "Error loading image \"%s\".\n", filename);
 		return 0;
 	}
 
 	fclose(f);
+	free(img->pixels);
 
-	img->pixels = (uint32_t*)malloc(sizeof(uint32_t) * img->w * img->h);
+	img->w = w;
+	img->h = h;
+	img->pixels = (uint32_t*)malloc(sizeof(uint32_t) * w * h);
 
-	for(int i = 0; i < img->w * img->h; i++)
+	for(int i = 0; i < w * h; i++)
 		img->pixels[i] = (pixels[i].red << 16) | (pixels[i].green << 8) | (pixels[i].blue);
 
 	free(pixels);
