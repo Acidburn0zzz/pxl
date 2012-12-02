@@ -10,6 +10,9 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 #include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "utils.h"
 #include "image.h"
 #include "reader.h"
@@ -33,6 +36,8 @@ int last_cell_y;
 
 int offset_x;
 int offset_y;
+
+time_t last_mtime;
 
 void exiterr(const char* fmt, ...)
 {
@@ -167,7 +172,8 @@ void read_image(int direction)
 
 	set_filename(direction);
 
-	while(!read_ppm_P6(filename, &img))
+	struct stat sb;
+	while(stat(filename, &sb) == -1 || !read_ppm_P6(filename, &img))
 	{
 		set_filename(direction);
 
@@ -175,6 +181,7 @@ void read_image(int direction)
 			exiterr("No file is readable.\n");
 		i++;
 	}
+	last_mtime = sb.st_mtime;
 }
 
 void draw_grid_cell(uint32_t rgb)
@@ -389,6 +396,21 @@ void handle_event()
 	}
 }
 
+int file_changed()
+{
+	struct stat sb;
+	if (stat(filename, &sb) == -1 || last_mtime == sb.st_mtime)
+		return 0;
+	last_mtime = sb.st_mtime;
+	return 1;
+}
+
+void reload_file()
+{
+	read_ppm_P6(filename, &img);
+	redraw();
+}
+
 int main(int argc, char** argv)
 {
 	if(argc <= 1)
@@ -419,8 +441,18 @@ int main(int argc, char** argv)
 	set_offset(0, 0);
 	draw();
 
+	uint32_t last_ticks = SDL_GetTicks();
+
 	for(;;)
 	{
+		uint32_t ticks = SDL_GetTicks();
+		if ((ticks - last_ticks) > 1000)
+		{
+			last_ticks = ticks;
+			if (file_changed())
+				reload_file();
+		}
+
 		handle_event();
 
 		if(fb_dirty)
