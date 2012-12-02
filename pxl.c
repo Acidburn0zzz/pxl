@@ -303,6 +303,10 @@ void handle_keydown(SDL_KeyboardEvent* event)
 			grid ^= 1;
 			redraw();
 			break;
+		case SDLK_r:
+			read_ppm_P6(filename, &img);
+			redraw();
+			break;
 		case SDLK_SPACE:
 			read_image(1);
 			redraw();

@@ -7,12 +7,13 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 
 usage:
 -----
-# ./pxl *.ppm 
+# ./pxl *.ppm
 
 keybindings:
 -----------
 {0 .. 9} = zoom value 2 ^ {0 .. 9}
 g = toggle grid
+r = reload current image
 arrow keys = scrolling in screen size steps
 Space = show next image
 Backspace = show prev image
