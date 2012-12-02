@@ -93,7 +93,7 @@ void set_pixel(int x, int y, uint32_t* fb, uint32_t rgb)
 }
 
 void draw_tile(int size, int x0, int y0, uint32_t color)
-{	
+{
 	uint32_t* fb0 = (uint32_t*)screen->pixels + x0 + screen->w * y0;
 
 	for(int y = 0; y < size; y++, fb0 += screen->w)
@@ -102,7 +102,7 @@ void draw_tile(int size, int x0, int y0, uint32_t color)
 }
 
 void draw_partial(int size, int x0, int y0, uint32_t color)
-{	
+{
 	uint32_t* fb = (uint32_t*)screen->pixels;
 	int w = screen->w;
 	int h = screen->h;
@@ -169,10 +169,10 @@ void set_filename(int direction)
 void read_image(int direction)
 {
 	int i = 0;
+	struct stat sb;
 
 	set_filename(direction);
 
-	struct stat sb;
 	while(stat(filename, &sb) == -1 || !read_ppm_P6(filename, &img))
 	{
 		set_filename(direction);
@@ -181,6 +181,7 @@ void read_image(int direction)
 			exiterr("No file is readable.\n");
 		i++;
 	}
+
 	last_mtime = sb.st_mtime;
 }
 
@@ -234,7 +235,7 @@ void change(int mouse_x, int mouse_y)
 		uint32_t p = img.pixels[y * img.w + x];
 		set_caption(x, y, (p >> 16) & 255, (p >> 8) & 255, p & 255);
 	}
-	else 
+	else
 	{
 		SDL_ShowCursor(1);
 		set_default_caption();
@@ -246,7 +247,7 @@ void set_offset(int new_x, int new_y)
 	int old_x = offset_x;
 	int old_y = offset_y;
 
-	int max_x = screen->w - (img.w * (scale + grid) + grid);	
+	int max_x = screen->w - (img.w * (scale + grid) + grid);
 	int max_y = screen->h - (img.h * (scale + grid) + grid);
 
 	if(max_x >= 0)
@@ -399,16 +400,30 @@ void handle_event()
 int file_changed()
 {
 	struct stat sb;
-	if (stat(filename, &sb) == -1 || last_mtime == sb.st_mtime)
+
+	if(stat(filename, &sb) == -1 || last_mtime == sb.st_mtime)
 		return 0;
+
 	last_mtime = sb.st_mtime;
+
 	return 1;
 }
 
-void reload_file()
+void reload_file_if_changed()
 {
-	read_ppm_P6(filename, &img);
-	redraw();
+	static uint32_t last_ticks = 0;
+	uint32_t ticks = SDL_GetTicks();
+
+	if((ticks - last_ticks) > 1000)
+	{
+		last_ticks = ticks;
+
+		if(file_changed())
+		{
+			read_ppm_P6(filename, &img);
+			redraw();
+		}
+	}
 }
 
 int main(int argc, char** argv)
@@ -434,6 +449,7 @@ int main(int argc, char** argv)
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
 		exiterr("SDL can not be initialized.\n");
+
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
 	read_image(1);
@@ -441,18 +457,9 @@ int main(int argc, char** argv)
 	set_offset(0, 0);
 	draw();
 
-	uint32_t last_ticks = SDL_GetTicks();
-
 	for(;;)
 	{
-		uint32_t ticks = SDL_GetTicks();
-		if ((ticks - last_ticks) > 1000)
-		{
-			last_ticks = ticks;
-			if (file_changed())
-				reload_file();
-		}
-
+		reload_file_if_changed();
 		handle_event();
 
 		if(fb_dirty)

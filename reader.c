@@ -19,7 +19,7 @@ int read_ppm_P6(const char* filename, struct image *img)
 	int c, rgb;
 
 	FILE* f = fopen(filename, "r");
-	
+
 	if(!f)
 	{
 		fprintf(stderr, "File \"%s\" can not be opened.\n", filename);
@@ -36,7 +36,9 @@ int read_ppm_P6(const char* filename, struct image *img)
 	c = getc(f);
 
 	int integer[3] = { 0, 0, 0};
-	for (int i = 0; i < 3; i++) {
+
+	for(int i = 0; i < 3; i++)
+	{
 		while('#' == (c = getc(f)))
 			while(getc(f) != '\n');
 
@@ -44,25 +46,31 @@ int read_ppm_P6(const char* filename, struct image *img)
 			c = getc(f);
 
 		char buff[16];
-		for (int pos = 0; pos < 16; pos++) {
+
+		for(int pos = 0; pos < 16; pos++)
+		{
 			if (('0' <= c) && (c <= '9'))
 			{
 				buff[pos] = c;
 				c = getc(f);
-			} else {
+			}
+			else
+			{
 				buff[pos] = 0;
 				break;
 			}
 		}
+
 		integer[i] = atoi(buff);
 	}
-	
+
 	if(!integer[0] && !integer[1] && !integer[2])
 	{
 		fclose(f);
 		fprintf(stderr, "Could not read image \"%s\".\n", filename);
 		return 0;
 	}
+
 	img->w = integer[0];
 	img->h = integer[1];
 	rgb = integer[2];
@@ -75,7 +83,7 @@ int read_ppm_P6(const char* filename, struct image *img)
 	}
 
 	free(img->pixels);
-	
+
 	size_t bytes = sizeof(struct pixel) * img->w * img->h;
 	struct pixel* pixels = (struct pixel*)malloc(bytes);
 
@@ -98,7 +106,8 @@ int read_ppm_P6(const char* filename, struct image *img)
 	fclose(f);
 
 	img->pixels = (uint32_t*)malloc(sizeof(uint32_t) * img->w * img->h);
-	for (int i = 0; i < img->w * img->h; i++)
+
+	for(int i = 0; i < img->w * img->h; i++)
 		img->pixels[i] = (pixels[i].red << 16) | (pixels[i].green << 8) | (pixels[i].blue);
 
 	free(pixels);
