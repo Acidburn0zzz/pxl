@@ -435,6 +435,7 @@ int main(int argc, char** argv)
 	if(argc <= 1)
 		exiterr("No args.\n");
 
+	screen = 0;
 	img.pixels = 0;
 
 	scale = 1;
